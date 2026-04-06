@@ -45,13 +45,13 @@ jobs:
 
     # 🔹 Build Docker Image
     - name: Build Docker Image
-      run: docker build -t devsecops-demo .
+      run: docker build -t devsecops-demo:latest .
 
     # 🔹 Scan Docker Image
     - name: Scan Docker Image with Trivy
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: devsecops-demo
+        image-ref: devsecops-demo:latest
 
     # 🔹 Configure AWS
     - name: Configure AWS Credentials
@@ -66,12 +66,16 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    # 🔹 Set Repository Name (Best Practice)
+    - name: Set ECR Repository
+      run: echo "ECR_REPOSITORY=devsecops-demo" >> $GITHUB_ENV
+
     # 🔹 Tag Image
     - name: Tag Docker Image
       run: |
-        docker tag devsecops-demo:latest ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+        docker tag devsecops-demo:latest ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
 
     # 🔹 Push Image
     - name: Push Docker Image to ECR
       run: |
-        docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+        docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
